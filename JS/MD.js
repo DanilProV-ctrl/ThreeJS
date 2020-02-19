@@ -21,10 +21,24 @@ window.onload = function() {
     gui.add(ball, 'positionX').min(-2).max(2).step(0.1);
     gui.add(ball, 'positionZ').min(-2).max(2).step(0.1)
     var renderer = new THREE.WebGLRenderer({ canvas: canvas });
-    renderer.setClearColor(0x000000);
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 5000);
-    camera.position.set(0, 0, 1000);
+
+    var starsGeo = new THREE.Geometry();
+    var starsMat = new THREE.ParticleBasicMaterial({ color: 0xffffff, size: 1, sizeAttenuation: false });
+    var stars;
+    for (var i = 0; i < 5000; i++) {
+        var vertex = new THREE.Vector3();
+        vertex.x = Math.random() * 2 - 1
+        vertex.y = Math.random() * 2 - 1;
+        vertex.z = Math.random() * 2 - 1;
+        vertex.multiplyScalar(7000);
+        starsGeo.vertices.push(vertex);
+    }
+    stars = new THREE.ParticleSystem(starsGeo, starsMat);
+    scene.add(stars);
+    var camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100000);
+    camera.position.z = 1000;
+    camera.position.x = 0;
     var light = new THREE.SpotLight();
     light.castShadow = true;
     light.position.set(0, 0, 1000);
@@ -41,6 +55,11 @@ window.onload = function() {
     Mesh.castShadow = true;
     Mesh.reactiveShadow = true;
     scene.add(Mesh);
+    var y = 0;
+
+    document.addEventListener('mousemove', function(event) {
+        y = parseInt(event.offsetY);
+    })
 
     function loop() {
         Mesh.rotation.y += ball.rotationY;
@@ -49,9 +68,11 @@ window.onload = function() {
         Mesh.position.y += ball.positionY;
         Mesh.position.x += ball.positionX;
         Mesh.position.z += ball.positionZ;
-        renderer.render(scene, camera);
+        camera.position.y = y * 0.5;
+        camera.lookAt(Mesh.position);
         renderer.mapShadowEnabled = true;
         requestAnimationFrame(function() { loop(); });
+        renderer.render(scene, camera);
     }
     loop();
 }
